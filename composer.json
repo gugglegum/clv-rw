@@ -17,6 +17,6 @@
   },
   "require": {
     "php": ">=7.0.0",
-    "gugglegum/mp-str-pad": "^1.0"
+    "gugglegum/mb-str-pad": "^1.0"
   }
 }
