@@ -1,0 +1,22 @@
+{
+  "name": "gugglegum/clv-rw",
+  "description": "Reader and writer for text files with constant length values",
+  "type": "library",
+  "keywords": ["clv", "parser", "reader", "writer"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Paul Melekhov",
+      "email": "gugglegum@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "gugglegum\\ClvRw\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.0.0",
+    "gugglegum/mp-str-pad": "^1.0"
+  }
+}
