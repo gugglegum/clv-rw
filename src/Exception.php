@@ -1,6 +1,6 @@
 <?php
 
-namespace gugglegum\CsvRw;
+namespace gugglegum\ClvRw;
 
 class Exception extends \Exception
 {
