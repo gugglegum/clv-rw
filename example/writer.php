@@ -5,15 +5,11 @@
  * ```
  * php reader.php | php writer.php
  * ```
- *
  * You can redirect it to any file, for example:
- *
  * ```
  * php reader.php | php writer.php > sample2.clv
  * ```
- *
- * It will create sample2.clv which should be equal ti sample.clv
- *
+ * It will create sample2.clv which should be equal to sample.clv
  */
 
 use gugglegum\ClvRw\Column;
