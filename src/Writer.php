@@ -16,7 +16,7 @@ class Writer
     private $columns;
 
     /**
-     * Padding character
+     * Padding character, used to fill excess space in cells
      *
      * @var string
      */
@@ -107,8 +107,6 @@ class Writer
 
     /**
      * Initializes internal state of newly opened or assigned file
-     *
-     * @throws Exception
      */
     private function init()
     {
@@ -130,7 +128,6 @@ class Writer
      * Returns a names of columns
      *
      * @return array
-     * @throws Exception
      */
     public function getColumnNames()
     {

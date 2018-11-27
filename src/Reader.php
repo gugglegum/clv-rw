@@ -21,6 +21,13 @@ class Reader implements Iterator
     private $columns;
 
     /**
+     * Padding character, used to fill excess space in cells
+     *
+     * @var string
+     */
+    private $padding = ' ';
+
+    /**
      * Current line number in CLV file
      *
      * @var int
@@ -265,8 +272,11 @@ class Reader implements Iterator
             }
         }
 
+        // Trim <CR> or <CR>+<LF> at the end of string
+        $s = rtrim($s, "\r\n");
+
         // Return empty array if line empty
-        if (trim($s) === '') {
+        if ($s === '') {
             return [];
         }
 
@@ -277,7 +287,7 @@ class Reader implements Iterator
             if (($value = substr($s, $startPos, $length)) === false) {
                 throw new Exception("Failed to parse CLV file/stream at line {$this->lineNumber}");
             }
-            $row[$column->getName()] = rtrim($value);
+            $row[$column->getName()] = rtrim($value, $this->padding);
             $startPos += $length;
         }
 
@@ -317,7 +327,7 @@ class Reader implements Iterator
      * Returns valid file handle CLV reader associated with or raises exception otherwise.
      *
      * @return resource
-     * @throws ReaderException
+     * @throws Exception
      */
     private function getValidFileHandle()
     {
@@ -345,6 +355,24 @@ class Reader implements Iterator
     public function setIgnoreEmptyDataLines(bool $ignoreEmptyDataLines): Reader
     {
         $this->ignoreEmptyDataLines = $ignoreEmptyDataLines;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPadding(): string
+    {
+        return $this->padding;
+    }
+
+    /**
+     * @param string $padding
+     * @return Reader
+     */
+    public function setPadding(string $padding): Reader
+    {
+        $this->padding = $padding;
         return $this;
     }
 }

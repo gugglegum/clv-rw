@@ -2,7 +2,7 @@
   "name": "gugglegum/clv-rw",
   "description": "Reader and writer for text files with constant length values",
   "type": "library",
-  "keywords": ["clv", "parser", "reader", "writer"],
+  "keywords": ["fixed size", "fixed length", "constant size", "constant length", "table", "text", "columns", "cells", "parser", "reader", "writer"],
   "license": "MIT",
   "authors": [
     {
@@ -17,6 +17,7 @@
   },
   "require": {
     "php": ">=7.0.0",
+    "ext-mbstring": "*",
     "gugglegum/mb-str-pad": "^1.0"
   }
 }
