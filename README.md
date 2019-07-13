@@ -1,6 +1,6 @@
 # Reader & Writer for text files with Constant Length Values
 
-This is a very rarely used data format, which is a text file with fixed-length lines. It's a table data with rows and cells. Rows are text lines separated by `CR` or `CR`+`LF` (`\n` or `\r\n`). Cells have a fixed size, so no special separator character is used. Excess space is filled with spaces.
+This is a very rarely used data format, which is a text file with fixed-length lines. It's a table data with rows and cells. Rows are text lines separated by `LF` or `CR`+`LF` (`\n` or `\r\n`). Cells have a fixed size, so no special separator character is used. Excess space is filled with spaces.
 
 This format has more disadvantages than advantages, so use it only to interact with older systems. Do not use this format in new services. CSV or JSON is better in every way. The main limitation of this format is that value cannot be greater than predefined size of column. But if you'll define big size of column — many cells will be filled mostly with spaces.
 
