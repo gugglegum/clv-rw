@@ -13,17 +13,13 @@ class Column
 {
     /**
      * Column name
-     *
-     * @var string
      */
-    private $name;
+    private string $name;
 
     /**
      * Column length (size)
-     *
-     * @var int
      */
-    private $length;
+    private int $length;
 
     /**
      * Creates a column with static call
@@ -37,37 +33,23 @@ class Column
         return (new self())->setName($name)->setLength($length);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @param mixed $name
-     * @return Column
-     */
-    public function setName($name)
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getLength()
+    public function getLength(): int
     {
         return $this->length;
     }
 
-    /**
-     * @param mixed $length
-     * @return Column
-     */
-    public function setLength($length)
+    public function setLength(int $length): self
     {
         $this->length = $length;
         return $this;

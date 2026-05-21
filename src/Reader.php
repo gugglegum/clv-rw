@@ -175,7 +175,7 @@ class Reader implements Iterator
      * @return array|null
      * @throws Exception
      */
-    public function current()
+    public function current(): ?array
     {
         if (!$this->isInitialized) {
             $this->init();
@@ -187,10 +187,9 @@ class Reader implements Iterator
      * Returns a number of current row (starting from 0). When CLV file just opened or assigned this method returns 0
      * (no matter is CLV file empty or not).
      *
-     * @return int|null
      * @throws Exception
      */
-    public function key()
+    public function key(): int
     {
         if (!$this->isInitialized) {
             $this->init();
@@ -201,10 +200,9 @@ class Reader implements Iterator
     /**
      * Returns TRUE if current row is valid. It returns FALSE if and only if `key()` pointing to end of file.
      *
-     * @return bool
      * @throws Exception
      */
-    public function valid()
+    public function valid(): bool
     {
         if (!$this->isInitialized) {
             $this->init();
@@ -218,7 +216,7 @@ class Reader implements Iterator
      *
      * @throws Exception
      */
-    public function next()
+    public function next(): void
     {
         if (!$this->isInitialized) {
             $this->init();
@@ -299,7 +297,7 @@ class Reader implements Iterator
      *
      * @throws Exception
      */
-    public function rewind()
+    public function rewind(): void
     {
         if ($this->lineNumber !== null) {
             $fileHandle = $this->getValidFileHandle();

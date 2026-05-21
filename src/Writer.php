@@ -153,6 +153,7 @@ class Writer
      */
     public function writeRow(array $row)
     {
+        $fileHandle = $this->getValidFileHandle();
         if (!$this->isInitialized) {
             $this->init();
         }
@@ -183,7 +184,7 @@ class Writer
             throw new Exception('Passed data for CSV missing field(s): "' . implode('", "', $missing) . '" (expected: "' . implode('", "', $columnNames) . '")');
         }
         $this->lineNumber++;
-        if (!fputs($this->getValidFileHandle(), $line . "\n")) {
+        if (!fputs($fileHandle, $line . "\n")) {
             throw new Exception("Failed to write CLV row at line {$this->lineNumber}");
         }
     }
