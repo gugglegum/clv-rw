@@ -14,15 +14,12 @@ namespace gugglegum\ClvRw;
  */
 class ColumnsSet implements \Iterator, \Countable
 {
-    /**
-     * @var int
-     */
-    private $position = 0;
+    private int $position = 0;
 
     /**
      * @var Column[]
      */
-    private $columns = [];
+    private array $columns = [];
 
     public function __construct(array $columns)
     {
@@ -37,7 +34,7 @@ class ColumnsSet implements \Iterator, \Countable
         return $this->columns;
     }
 
-    public function setColumns(array $columns)
+    public function setColumns(array $columns): self
     {
         $this->clearColumns();
         foreach ($columns as $column) {
@@ -58,44 +55,44 @@ class ColumnsSet implements \Iterator, \Countable
         return $this;
     }
 
-    public function __toArray()
+    /**
+     * @return Column[]
+     */
+    public function __toArray(): array
     {
         return $this->columns;
     }
 
     // Iterator interface implementation:
 
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }
 
-    /**
-     * @return Column
-     */
-    public function current()
+    public function current(): Column
     {
         return $this->columns[$this->position];
     }
 
-    public function key()
+    public function key(): int
     {
         return $this->position;
     }
 
-    public function next()
+    public function next(): void
     {
         $this->position++;
     }
 
-    public function valid()
+    public function valid(): bool
     {
         return array_key_exists($this->position, $this->columns);
     }
 
     // Countable interface implementation:
 
-    public function count()
+    public function count(): int
     {
         return count($this->columns);
     }
