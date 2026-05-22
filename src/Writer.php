@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace gugglegum\ClvRw;
 
-use gugglegum\mb_str_pad\MbString;
-
 /**
  * Writer for text files in "Constant Length Values" format.
  */
@@ -171,7 +169,7 @@ class Writer
                     throw new Exception("Too long value \"$value\" for column $columnName (max {$column->getLength()} characters, got $length)");
                 }
             }
-            $line .= MbString::mb_str_pad($value, $column->getLength(), $this->padding);
+            $line .= mb_str_pad($value, $column->getLength(), $this->padding, STR_PAD_RIGHT, 'UTF-8');
         }
         $this->lineNumber++;
         if (fputs($this->getValidFileHandle(), $line . "\n") === false) {
