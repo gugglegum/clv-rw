@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace gugglegum\ClvRw;
 
-class Exception extends \Exception
+final class Exception extends \RuntimeException
 {
 
 }
