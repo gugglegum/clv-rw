@@ -121,6 +121,16 @@ final class WriterTest extends TestCase
         $this->assertSame("a.bb.ccc.\n", $this->readBack($handle));
     }
 
+    public function testWriteRowPadsMultibyteValuesByCharacterWidth(): void
+    {
+        $handle = $this->memoryStream();
+        $writer = (new Writer())->assign($handle, $this->columns());
+
+        $writer->writeRow(['A' => 'я', 'B' => 'ёж', 'C' => '中']);
+
+        $this->assertSame("я ёж 中   \n", $this->readBack($handle));
+    }
+
     public function testGetColumnNamesReflectsConfiguredColumns(): void
     {
         $writer = (new Writer())->assign($this->memoryStream(), $this->columns());
@@ -152,6 +162,15 @@ final class WriterTest extends TestCase
     {
         $this->expectException(Exception::class);
         (new Writer())->writeRow(['A' => 'a', 'B' => 'bb', 'C' => 'ccc']);
+    }
+
+    public function testInvalidAssignedHandleThrows(): void
+    {
+        $writer = (new Writer())->assign('not-a-resource', $this->columns());
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('not valid file handle');
+        $writer->writeRow(['A' => 'a', 'B' => 'bb', 'C' => 'ccc']);
     }
 
     public function testRoundTripWithReaderProducesOriginalRows(): void

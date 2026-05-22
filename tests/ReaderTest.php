@@ -158,6 +158,19 @@ final class ReaderTest extends TestCase
         );
     }
 
+    public function testMultibyteRowsAreReadByCharacterWidth(): void
+    {
+        $reader = (new Reader())->assign(
+            $this->streamFrom("я ёж 中   \n"),
+            $this->columns(),
+        );
+
+        $this->assertSame(
+            [['A' => 'я', 'B' => 'ёж', 'C' => '中']],
+            $reader->getAllRows(),
+        );
+    }
+
     public function testRewindRestartsIteration(): void
     {
         $reader = (new Reader())->assign(
@@ -213,6 +226,15 @@ final class ReaderTest extends TestCase
     {
         $this->expectException(Exception::class);
         (new Reader())->current();
+    }
+
+    public function testInvalidAssignedHandleThrows(): void
+    {
+        $reader = (new Reader())->assign('not-a-resource', $this->columns());
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('not valid file handle');
+        $reader->current();
     }
 
     public function testCloseUnassignsFileHandle(): void

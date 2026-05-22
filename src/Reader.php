@@ -268,7 +268,7 @@ class Reader implements Iterator
         $startPos = 0;
         foreach ($this->getValidColumns() as $column) {
             $length = $column->getLength();
-            $value = substr($s, $startPos, $length);
+            $value = mb_substr($s, $startPos, $length, 'UTF-8');
             $row[$column->getName()] = rtrim($value, $this->padding);
             $startPos += $length;
         }
