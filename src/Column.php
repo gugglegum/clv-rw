@@ -9,7 +9,7 @@ namespace gugglegum\ClvRw;
  *
  * @package ActiveFreedom\Drivers\BodyWrappers\Ftp\Reader
  */
-class Column
+final class Column
 {
     /**
      * Column name

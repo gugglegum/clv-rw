@@ -12,7 +12,7 @@ namespace gugglegum\ClvRw;
  *
  * @package ActiveFreedom\Drivers\BodyWrappers\Ftp\Reader
  */
-class ColumnsSet implements \Iterator, \Countable
+final class ColumnsSet implements \Iterator, \Countable
 {
     private int $position = 0;
 
