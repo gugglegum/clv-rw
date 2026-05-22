@@ -8,6 +8,9 @@ use gugglegum\ClvRw\Column;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Tests column definition value object behavior.
+ */
 #[CoversClass(Column::class)]
 final class ColumnTest extends TestCase
 {

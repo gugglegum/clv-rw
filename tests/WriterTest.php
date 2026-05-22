@@ -12,9 +12,15 @@ use gugglegum\ClvRw\Writer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Tests writing fixed-width CLV rows to files and streams.
+ */
 #[CoversClass(Writer::class)]
 final class WriterTest extends TestCase
 {
+    /**
+     * Returns the shared column fixture used by writer tests.
+     */
     private function columns(): ColumnsSet
     {
         return new ColumnsSet([
@@ -25,6 +31,8 @@ final class WriterTest extends TestCase
     }
 
     /**
+     * Creates an empty in-memory stream for writer output.
+     *
      * @return resource
      */
     private function memoryStream()
@@ -32,6 +40,11 @@ final class WriterTest extends TestCase
         return fopen('php://memory', 'r+');
     }
 
+    /**
+     * Rewinds and reads all contents from a stream.
+     *
+     * @param resource $handle Stream handle to read back.
+     */
     private function readBack($handle): string
     {
         rewind($handle);

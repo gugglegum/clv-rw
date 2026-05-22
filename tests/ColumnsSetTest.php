@@ -9,6 +9,9 @@ use gugglegum\ClvRw\ColumnsSet;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Tests ordered column set storage and iterator behavior.
+ */
 #[CoversClass(ColumnsSet::class)]
 final class ColumnsSetTest extends TestCase
 {

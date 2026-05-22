@@ -11,9 +11,15 @@ use gugglegum\ClvRw\Reader;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Tests reading fixed-width CLV rows from files and streams.
+ */
 #[CoversClass(Reader::class)]
 final class ReaderTest extends TestCase
 {
+    /**
+     * Returns the shared column fixture used by reader tests.
+     */
     private function columns(): ColumnsSet
     {
         return new ColumnsSet([
@@ -24,6 +30,8 @@ final class ReaderTest extends TestCase
     }
 
     /**
+     * Creates an in-memory stream initialized with the given content.
+     *
      * @return resource
      */
     private function streamFrom(string $content)
