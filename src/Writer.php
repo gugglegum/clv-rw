@@ -6,62 +6,55 @@ namespace gugglegum\ClvRw;
 
 use gugglegum\mb_str_pad\MbString;
 
+/**
+ * Writer for text files in "Constant Length Values" format.
+ */
 class Writer
 {
     /**
-     * Columns definitions for parsing CLV files
-     *
-     * @var ColumnsSet
+     * Columns definitions for writing CLV files
      */
-    private $columns;
+    private ColumnsSet $columns;
 
     /**
      * Padding character, used to fill excess space in cells
-     *
-     * @var string
      */
-    private $padding = ' ';
+    private string $padding = ' ';
 
     /**
      * If enabled too long values will be silently trimmed, otherwise an exception will be thrown
-     *
-     * @var bool
      */
-    private $trimTooLongValues = false;
+    private bool $trimTooLongValues = false;
 
     /**
      * Current line number in CLV file
-     *
-     * @var int
      */
-    private $lineNumber;
+    private int $lineNumber = 0;
 
     /**
      * Opened CLV file handle
      *
-     * @var resource
+     * @var resource|null
      */
-    private $fileHandle;
+    private $fileHandle = null;
 
     /**
      * Indicates whether writer initialized or not
-     *
-     * @var bool
      */
-    private $isInitialized;
+    private bool $isInitialized = false;
 
     /**
-     * Opens CLV file or URL/stream in read mode
+     * Opens CLV file or URL/stream in write mode
      *
-     * @param string $fileName    File name or URL/steam
-     * @param ColumnsSet $columns Headers to use if CLV without header-line or to override CLV headers
-     * @return Writer
+     * @param string $fileName File name or URL/stream
+     * @param ColumnsSet $columns Column definitions to write rows with
+     * @return static
      * @throws Exception
      */
-    public function open(string $fileName, ColumnsSet $columns): Writer
+    public function open(string $fileName, ColumnsSet $columns): static
     {
-        if (!$fileHandle = @fopen($fileName, 'r')) {
-            throw new Exception("Can't open file \"{$fileName}\" for reading");
+        if (($fileHandle = @fopen($fileName, 'w')) === false) {
+            throw new Exception("Can't open file \"$fileName\" for writing");
         }
         $this->assign($fileHandle, $columns);
         return $this;
@@ -69,24 +62,24 @@ class Writer
 
     /**
      * Closes CLV file or URL/stream and resets internal state. This method should be called after `open()` method if
-     * you no more want to read.
+     * you no more want to write.
      *
      * @throws Exception
      */
-    public function close()
+    public function close(): void
     {
         fclose($this->getValidFileHandle());
         $this->unAssign();
     }
 
     /**
-     * Assigns existing file handle (resource) to read CSV data from it. Can be used to read data from "STDIN".
+     * Assigns existing file handle (resource) to write CLV data to it. Can be used to write data to "STDOUT".
      *
      * @param resource $fileHandle Opened file handle
      * @param ColumnsSet $columns
-     * @return $this
+     * @return static
      */
-    public function assign($fileHandle, ColumnsSet $columns)
+    public function assign($fileHandle, ColumnsSet $columns): static
     {
         $this->fileHandle = $fileHandle;
         $this->columns = $columns;
@@ -96,19 +89,19 @@ class Writer
 
     /**
      * Un-assigns file handle from CLV writer. This method should be called after `assign()` method if you no more want
-     * to read.
+     * to write.
      */
-    public function unAssign()
+    public function unAssign(): void
     {
         $this->fileHandle = null;
-        $this->columns = null;
+        unset($this->columns);
         $this->isInitialized = false;
     }
 
     /**
      * Initializes internal state of newly opened or assigned file
      */
-    private function init()
+    private function init(): void
     {
         $this->lineNumber = 0;
         $this->isInitialized = true;
@@ -125,33 +118,31 @@ class Writer
     }
 
     /**
-     * Returns a names of columns
+     * Returns column names.
      *
-     * @return array
+     * @return string[]
      */
-    public function getColumnNames()
+    public function getColumnNames(): array
     {
         if (!$this->isInitialized) {
             $this->init();
         }
         $columnNames = [];
-        foreach ($this->columns as $column) {
+        foreach ($this->getValidColumns() as $column) {
             $columnNames[] = $column->getName();
         }
         return $columnNames;
     }
 
     /**
-     * Writes a CSV row to file (or stream)
+     * Writes a CLV row to file or stream.
      *
-     * If headers for CSV are defined passed array must be associative array where keys are header names. The amount of
-     * array elements must be equal to amount of headers. If headers are not defined the array must be ordered
-     * (contain keys 0, 1, 2, ...). Amount of elements must be the same for all rows.
+     * Passed array must be associative, where keys are configured column names.
      *
-     * @param array $row Associative or ordered array with data of row to write in CSV
+     * @param array<string, mixed> $row Associative row data to write in CLV
      * @throws Exception
      */
-    public function writeRow(array $row)
+    public function writeRow(array $row): void
     {
         if (!$this->isInitialized) {
             $this->init();
@@ -163,28 +154,28 @@ class Writer
         if ($unexpected = array_diff(array_keys($row), $columnNames)) {
             throw new Exception('Passed data for CLV contains unexpected field(s): "' . implode('", "', $unexpected) . '" (expected: "' . implode('", "', $columnNames) . '")');
         }
+        if ($missing = array_diff($columnNames, array_keys($row))) {
+            throw new Exception('Passed data for CLV missing field(s): "' . implode('", "', $missing) . '" (expected: "' . implode('", "', $columnNames) . '")');
+        }
 
         $line = '';
-        $missing = [];
-        foreach ($this->columns as $column) {
-            if (!array_key_exists($column->getName(), $row)) {
-                $missing[] = $column->getName();
-            }
-            if (($length = mb_strlen((string) $row[$column->getName()], 'UTF-8')) > $column->getLength()) {
+        foreach ($this->getValidColumns() as $column) {
+            $columnName = $column->getName();
+            $value = (string) $row[$columnName];
+            $length = mb_strlen($value, 'UTF-8');
+
+            if ($length > $column->getLength()) {
                 if ($this->trimTooLongValues) {
-                    $row[$column->getName()] = mb_substr((string) $row[$column->getName()], 0, $column->getLength());
+                    $value = mb_substr($value, 0, $column->getLength());
                 } else {
-                    throw new Exception("Too long value \"{$row[$column->getName()]}\" for column {$column->getName()} (max {$column->getLength()} characters, got " . ($length) . ')');
+                    throw new Exception("Too long value \"$value\" for column $columnName (max {$column->getLength()} characters, got $length)");
                 }
             }
-            $line .= MbString::mb_str_pad((string) $row[$column->getName()], $column->getLength(), $this->padding);
-        }
-        if (!empty($missing)) {
-            throw new Exception('Passed data for CSV missing field(s): "' . implode('", "', $missing) . '" (expected: "' . implode('", "', $columnNames) . '")');
+            $line .= MbString::mb_str_pad($value, $column->getLength(), $this->padding);
         }
         $this->lineNumber++;
-        if (!fputs($this->getValidFileHandle(), $line . "\n")) {
-            throw new Exception("Failed to write CLV row at line {$this->lineNumber}");
+        if (fputs($this->getValidFileHandle(), $line . "\n") === false) {
+            throw new Exception("Failed to write CLV row at line $this->lineNumber");
         }
     }
 
@@ -207,7 +198,7 @@ class Writer
      */
     private function getValidFileHandle()
     {
-        if (!$this->fileHandle) {
+        if ($this->fileHandle === null) {
             throw new Exception("CLV writer not associated with any file or stream");
         }
         if (!is_resource($this->fileHandle)) {
@@ -217,7 +208,20 @@ class Writer
     }
 
     /**
-     * @return string
+     * Returns valid columns set associated with this writer or raises exception otherwise.
+     *
+     * @throws Exception
+     */
+    private function getValidColumns(): ColumnsSet
+    {
+        if (!isset($this->columns)) {
+            throw new Exception("CLV writer not associated with columns set");
+        }
+        return $this->columns;
+    }
+
+    /**
+     * Returns the padding character.
      */
     public function getPadding(): string
     {
@@ -225,17 +229,16 @@ class Writer
     }
 
     /**
-     * @param string $padding
-     * @return Writer
+     * Sets the padding character.
      */
-    public function setPadding(string $padding): Writer
+    public function setPadding(string $padding): static
     {
         $this->padding = $padding;
         return $this;
     }
 
     /**
-     * @return bool
+     * Returns whether too long values should be silently trimmed.
      */
     public function isTrimTooLongValues(): bool
     {
@@ -243,10 +246,9 @@ class Writer
     }
 
     /**
-     * @param bool $trimTooLongValues
-     * @return Writer
+     * Sets whether too long values should be silently trimmed.
      */
-    public function setTrimTooLongValues(bool $trimTooLongValues): Writer
+    public function setTrimTooLongValues(bool $trimTooLongValues): static
     {
         $this->trimTooLongValues = $trimTooLongValues;
         return $this;

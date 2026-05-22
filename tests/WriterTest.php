@@ -82,7 +82,17 @@ final class WriterTest extends TestCase
         $writer = (new Writer())->assign($this->memoryStream(), $this->columns());
 
         $this->expectException(Exception::class);
+        $this->expectExceptionMessage('got 10');
         $writer->writeRow(['A' => 'a', 'B' => 'bb', 'C' => 'cccccccccc']);
+    }
+
+    public function testMissingFieldThrows(): void
+    {
+        $writer = (new Writer())->assign($this->memoryStream(), $this->columns());
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('missing field');
+        $writer->writeRow(['A' => 'a', 'B' => 'bb']);
     }
 
     public function testTrimTooLongValuesTruncatesInsteadOfThrowing(): void
@@ -116,6 +126,26 @@ final class WriterTest extends TestCase
         $writer = (new Writer())->assign($this->memoryStream(), $this->columns());
 
         $this->assertSame(['A', 'B', 'C'], $writer->getColumnNames());
+    }
+
+    public function testOpenWritesToFile(): void
+    {
+        $fileName = tempnam(sys_get_temp_dir(), 'clv-rw-');
+        if ($fileName === false) {
+            self::fail('Failed to create temporary file');
+        }
+
+        try {
+            $writer = (new Writer())->open($fileName, $this->columns());
+            $writer->writeRow(['A' => 'a', 'B' => 'bb', 'C' => 'ccc']);
+            $writer->close();
+
+            $this->assertSame("a bb ccc \n", file_get_contents($fileName));
+        } finally {
+            if (is_file($fileName)) {
+                unlink($fileName);
+            }
+        }
     }
 
     public function testWriteRowWithoutAssignThrows(): void

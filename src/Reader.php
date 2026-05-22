@@ -7,82 +7,68 @@ namespace gugglegum\ClvRw;
 use Iterator;
 
 /**
- * Reader for text files in "Constant Length Values" format
+ * Reader for text files in "Constant Length Values" format.
  *
- * @package ActiveFreedom\Drivers\BodyWrappers\Ftp\Reader
+ * @implements Iterator<int, array<string, string>>
  */
 class Reader implements Iterator
 {
     /**
      * Columns definitions for parsing CLV files
-     *
-     * @var ColumnsSet
      */
-    private $columns;
+    private ColumnsSet $columns;
 
     /**
      * Padding character, used to fill excess space in cells
-     *
-     * @var string
      */
-    private $padding = ' ';
+    private string $padding = ' ';
 
     /**
      * Current line number in CLV file
-     *
-     * @var int
      */
-    private $lineNumber;
+    private int $lineNumber = 0;
 
     /**
      * Opened CLV file handle
      *
-     * @var resource
+     * @var resource|null
      */
-    private $fileHandle;
+    private $fileHandle = null;
 
     /**
      * Current number of row starting from 0
-     *
-     * @var int
      */
-    private $currentIndex;
+    private int $currentIndex = -1;
 
     /**
      * Current row array
-     *
-     * @var null|array
      */
-    private $currentRow;
+    private ?array $currentRow = null;
 
     /**
      * Indicates whether reader initialized or not
-     *
-     * @var bool
      */
-    private $isInitialized;
+    private bool $isInitialized = false;
 
     /**
      * Reader option: do not abort reading if CLV file contains empty row (not just finishes with empty new line)
      * Some services may produce such bad formed data. This option will help you. Note this option skips empty lines
      * in data section, not before header line.
-     *
-     * @var bool
      */
-    private $ignoreEmptyDataLines = false;
+    private bool $ignoreEmptyDataLines = false;
 
     /**
      * Opens CLV file or URL/stream in read mode
      *
-     * @param string $fileName    File name or URL/steam
+     * @param string $fileName File name or URL/stream
      * @param ColumnsSet $columns Headers to use if CLV without header-line or to override CLV headers
-     * @return Reader
+     * @return static
      * @throws Exception
      */
-    public function open(string $fileName, ColumnsSet $columns): Reader
+    public function open(string $fileName, ColumnsSet $columns): static
     {
-        if (!$fileHandle = @fopen($fileName, 'r')) {
-            throw new Exception("Can't open file \"{$fileName}\" for reading");
+        if (($fileHandle = @fopen($fileName, 'r')) === false) {
+            throw new Exception("Can't open file \"$fileName\" for reading");
         }
         $this->assign($fileHandle, $columns);
         return $this;
@@ -94,7 +80,7 @@ class Reader implements Iterator
      *
      * @throws Exception
      */
-    public function close()
+    public function close(): void
     {
         fclose($this->getValidFileHandle());
         $this->unAssign();
@@ -105,9 +91,9 @@ class Reader implements Iterator
      *
      * @param resource $fileHandle  Opened file handle
      * @param ColumnsSet $columns   Headers to use if CLV without header-line or to override CLV headers
-     * @return Reader
+     * @return static
      */
-    public function assign($fileHandle, ColumnsSet $columns): Reader
+    public function assign($fileHandle, ColumnsSet $columns): static
     {
         $this->fileHandle = $fileHandle;
         $this->columns = $columns;
@@ -119,10 +105,10 @@ class Reader implements Iterator
      * Un-assigns file handle from CLV reader. This method should be called after `assign()` method if you no more want
      * to read.
      */
-    public function unAssign()
+    public function unAssign(): void
     {
         $this->fileHandle = null;
-        $this->columns = null;
+        unset($this->columns);
         $this->isInitialized = false;
     }
 
@@ -131,7 +117,7 @@ class Reader implements Iterator
      *
      * @throws Exception
      */
-    private function init()
+    private function init(): void
     {
         $this->lineNumber = 0;
         $this->currentIndex = -1;
@@ -151,18 +137,18 @@ class Reader implements Iterator
     }
 
     /**
-     * Returns a names of columns
+     * Returns column names.
      *
-     * @return array
+     * @return string[]
      * @throws Exception
      */
-    public function getColumnNames()
+    public function getColumnNames(): array
     {
         if (!$this->isInitialized) {
             $this->init();
         }
         $columnNames = [];
-        foreach ($this->columns as $column) {
+        foreach ($this->getValidColumns() as $column) {
             $columnNames[] = $column->getName();
         }
         return $columnNames;
@@ -172,7 +158,7 @@ class Reader implements Iterator
      * Returns current row if it exists, null otherwise. When non-empty CLV file just opened or assigned this method
      * returns its first row. If column headers are set the row represents an associative array, ordered array otherwise.
      *
-     * @return array|null
+     * @return array<string, string>|null
      * @throws Exception
      */
     public function current(): ?array
@@ -240,9 +226,9 @@ class Reader implements Iterator
     /**
      * Returns all rows from CLV file
      *
-     * @return array
+     * @return array<int, array<string, string>>
      */
-    public function getAllRows()
+    public function getAllRows(): array
     {
         $rows = [];
         foreach ($this as $row) {
@@ -252,12 +238,12 @@ class Reader implements Iterator
     }
 
     /**
-     * Reads a row from CLV file
+     * Reads a row from CLV file.
      *
-     * @return false|array       Assoc array with data; empty array on empty line; false on EOF
+     * @return array<string, string>|false Associative row data; empty array on empty line; false on EOF.
      * @throws Exception
      */
-    private function readRow()
+    private function readRow(): array|false
     {
         $fileHandle = $this->getValidFileHandle();
 
@@ -266,7 +252,7 @@ class Reader implements Iterator
             if (feof($fileHandle)) {
                 return false;
             } else {
-                throw new Exception("Failed to read from CLV file/stream at line {$this->lineNumber}");
+                throw new Exception("Failed to read from CLV file/stream at line $this->lineNumber");
             }
         }
 
@@ -280,11 +266,9 @@ class Reader implements Iterator
 
         $row = [];
         $startPos = 0;
-        foreach ($this->columns as $column) {
+        foreach ($this->getValidColumns() as $column) {
             $length = $column->getLength();
-            if (($value = substr($s, $startPos, $length)) === false) {
-                throw new Exception("Failed to parse CLV file/stream at line {$this->lineNumber}");
-            }
+            $value = substr($s, $startPos, $length);
             $row[$column->getName()] = rtrim($value, $this->padding);
             $startPos += $length;
         }
@@ -299,7 +283,7 @@ class Reader implements Iterator
      */
     public function rewind(): void
     {
-        if ($this->lineNumber !== null) {
+        if ($this->isInitialized) {
             $fileHandle = $this->getValidFileHandle();
             if (stream_get_meta_data($fileHandle)['seekable']) {
                 rewind($fileHandle);
@@ -329,7 +313,7 @@ class Reader implements Iterator
      */
     private function getValidFileHandle()
     {
-        if (!$this->fileHandle) {
+        if ($this->fileHandle === null) {
             throw new Exception("CLV reader not associated with any file or stream");
         }
         if (!is_resource($this->fileHandle)) {
@@ -339,7 +323,20 @@ class Reader implements Iterator
     }
 
     /**
-     * @return bool
+     * Returns valid columns set associated with this reader or raises exception otherwise.
+     *
+     * @throws Exception
+     */
+    private function getValidColumns(): ColumnsSet
+    {
+        if (!isset($this->columns)) {
+            throw new Exception("CLV reader not associated with columns set");
+        }
+        return $this->columns;
+    }
+
+    /**
+     * Returns whether empty data lines should be skipped.
      */
     public function isIgnoreEmptyDataLines(): bool
     {
@@ -347,17 +344,16 @@ class Reader implements Iterator
     }
 
     /**
-     * @param bool $ignoreEmptyDataLines
-     * @return Reader
+     * Sets whether empty data lines should be skipped.
      */
-    public function setIgnoreEmptyDataLines(bool $ignoreEmptyDataLines): Reader
+    public function setIgnoreEmptyDataLines(bool $ignoreEmptyDataLines): static
     {
         $this->ignoreEmptyDataLines = $ignoreEmptyDataLines;
         return $this;
     }
 
     /**
-     * @return string
+     * Returns the padding character.
      */
     public function getPadding(): string
     {
@@ -365,10 +361,9 @@ class Reader implements Iterator
     }
 
     /**
-     * @param string $padding
-     * @return Reader
+     * Sets the padding character.
      */
-    public function setPadding(string $padding): Reader
+    public function setPadding(string $padding): static
     {
         $this->padding = $padding;
         return $this;
