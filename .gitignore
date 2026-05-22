@@ -1,5 +1,9 @@
-.idea
-composer.lock
-.phpunit.result.cache
-tests/.env
-vendor
+# IDE metadata
+/.idea/
+
+# Composer local files
+/composer.lock
+/vendor/
+
+# PHPUnit cache
+/.phpunit.result.cache
