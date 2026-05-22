@@ -170,7 +170,7 @@ class Writer
             if (!array_key_exists($column->getName(), $row)) {
                 $missing[] = $column->getName();
             }
-            if ($length = mb_strlen((string) $row[$column->getName()], 'UTF-8') > $column->getLength()) {
+            if (($length = mb_strlen((string) $row[$column->getName()], 'UTF-8')) > $column->getLength()) {
                 if ($this->trimTooLongValues) {
                     $row[$column->getName()] = mb_substr((string) $row[$column->getName()], 0, $column->getLength());
                 } else {
